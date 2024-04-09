@@ -7,20 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9E495EBA2BC408F00093086B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E495EB92BC408F00093086B /* ContentView.swift */; };
 		9E941D462BBDB291002E5955 /* VideoEditorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E941D452BBDB291002E5955 /* VideoEditorApp.swift */; };
 		9E941D4A2BBDB294002E5955 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9E941D492BBDB294002E5955 /* Assets.xcassets */; };
 		9E941D4D2BBDB294002E5955 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9E941D4C2BBDB294002E5955 /* Preview Assets.xcassets */; };
 		9E941D542BBDB2BF002E5955 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E941D532BBDB2BF002E5955 /* ZoomableScrollView.swift */; };
 		9E941D562BBDB2E3002E5955 /* AnnotatableVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E941D552BBDB2E3002E5955 /* AnnotatableVideoPlayer.swift */; };
+		9E9B98202BC50653006DF811 /* ScreenCaptureButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9B981F2BC50653006DF811 /* ScreenCaptureButton.swift */; };
+		9E9B98222BC50904006DF811 /* FeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9B98212BC50904006DF811 /* FeedViewModel.swift */; };
+		9E9B98282BC544A9006DF811 /* VideoPlayerControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9B98272BC544A9006DF811 /* VideoPlayerControls.swift */; };
+		9E9B982A2BC560DE006DF811 /* Color+NamedColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9B98292BC560DE006DF811 /* Color+NamedColors.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9E495EB92BC408F00093086B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		9E941D422BBDB291002E5955 /* VideoEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VideoEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9E941D452BBDB291002E5955 /* VideoEditorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoEditorApp.swift; sourceTree = "<group>"; };
 		9E941D492BBDB294002E5955 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9E941D4C2BBDB294002E5955 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		9E941D532BBDB2BF002E5955 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
 		9E941D552BBDB2E3002E5955 /* AnnotatableVideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotatableVideoPlayer.swift; sourceTree = "<group>"; };
+		9E9B981F2BC50653006DF811 /* ScreenCaptureButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureButton.swift; sourceTree = "<group>"; };
+		9E9B98212BC50904006DF811 /* FeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedViewModel.swift; sourceTree = "<group>"; };
+		9E9B98272BC544A9006DF811 /* VideoPlayerControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerControls.swift; sourceTree = "<group>"; };
+		9E9B98292BC560DE006DF811 /* Color+NamedColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+NamedColors.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +68,11 @@
 				9E941D4B2BBDB294002E5955 /* Preview Content */,
 				9E941D532BBDB2BF002E5955 /* ZoomableScrollView.swift */,
 				9E941D552BBDB2E3002E5955 /* AnnotatableVideoPlayer.swift */,
+				9E495EB92BC408F00093086B /* ContentView.swift */,
+				9E9B981F2BC50653006DF811 /* ScreenCaptureButton.swift */,
+				9E9B98212BC50904006DF811 /* FeedViewModel.swift */,
+				9E9B98272BC544A9006DF811 /* VideoPlayerControls.swift */,
+				9E9B98292BC560DE006DF811 /* Color+NamedColors.swift */,
 			);
 			path = VideoEditor;
 			sourceTree = "<group>";
@@ -140,8 +155,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9E9B98202BC50653006DF811 /* ScreenCaptureButton.swift in Sources */,
 				9E941D542BBDB2BF002E5955 /* ZoomableScrollView.swift in Sources */,
+				9E9B98222BC50904006DF811 /* FeedViewModel.swift in Sources */,
+				9E9B982A2BC560DE006DF811 /* Color+NamedColors.swift in Sources */,
+				9E9B98282BC544A9006DF811 /* VideoPlayerControls.swift in Sources */,
 				9E941D462BBDB291002E5955 /* VideoEditorApp.swift in Sources */,
+				9E495EBA2BC408F00093086B /* ContentView.swift in Sources */,
 				9E941D562BBDB2E3002E5955 /* AnnotatableVideoPlayer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -279,11 +299,14 @@
 				DEVELOPMENT_TEAM = 73554B5795;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need your permission to take photos and videos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We'll save your screen capture to Photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -308,11 +331,14 @@
 				DEVELOPMENT_TEAM = 73554B5795;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need your permission to take photos and videos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We'll save your screen capture to Photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
