@@ -12,15 +12,19 @@ import AVKit
 struct AnnotatableVideoPlayer: View {
     
     let url: URL
+    let imageView: UIImage?
     var strokeWidth: CGFloat = 3
 
-//    @ObservedObject var feedViewModel: FeedViewModel
+    @Environment(\.presentationMode) var presentationMode
+
+    @ObservedObject var feedViewModel: FeedViewModel
 //    var completion: () -> ()
 
     @State var player: AVPlayer? = nil
     @State var playerProgress: Double = 0 { didSet { syncControlsWithPlayerProgress() } }
     @State var playerPaused = false
     @State var inferredSliderWidth: CGFloat? = nil
+    @State var firstSliderProgress: CGFloat = 0
     
     @State private var startPoint: CGPoint = CGPoint(x: 196.5, y: 426.0)
     @State private var endPoint1: CGPoint =  CGPoint(x: 246.5, y: 276)
@@ -28,6 +32,7 @@ struct AnnotatableVideoPlayer: View {
     
     @State private var isDrawingAngleVisible: Bool = false
     
+    @State var presentedPlayers: [IdentifiablePlayer] = []
     
     @State var angleShow: Bool = false
     @State var isAngleAdded: Bool = false
@@ -60,7 +65,9 @@ struct AnnotatableVideoPlayer: View {
     @State var currentLine: Line? = nil
     @State var currentAngle: AngleView? = nil
     @State var currentArrow: Arrow? = nil
-
+    
+    @State var showPlayerControls = true
+    
     @State var drawColor: Color = .blue {
         didSet {
             currentScribble.color = drawColor
@@ -70,6 +77,8 @@ struct AnnotatableVideoPlayer: View {
     var canvasActive: Bool {
         inputMode != .ui
     }
+    
+    @State private var image: Image? = nil // State property to hold the image
 
     var lines: [Line] {
         var result = [Line]()
@@ -98,25 +107,50 @@ struct AnnotatableVideoPlayer: View {
     }
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            VStack(spacing: 25) {
-                header
-                    .padding(.horizontal)
-                mainLayer
-                footer
-                    .padding(.horizontal, 36)
+        NavigationView {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                VStack(spacing: 25) {
+                    header
+                        .padding(.horizontal)
+                    mainLayer
+                    if showPlayerControls{
+                        footer
+                            .padding(.horizontal, 36)
+                    }
+                }
             }
+            .navigationBarHidden(true)
+            .onDisappear(perform: deinitAll)
         }
-        .onAppear(perform: setupObserver)
-        .onDisappear(perform: deinitPlayerAndObserver)
+        .navigationBarHidden(true)
     }
+    
+    func loadPlayer(autoplay: Bool = true) {
+        let fileExtension = url.pathExtension.lowercased()
+        print(fileExtension)
+        if fileExtension == "mp4" || fileExtension == "mov" {
+            let player: AVPlayer = .init(url: url)
+            self.player = player
+            self.presentedPlayers = [.init(player: player)]
+            if autoplay {
+                self.player?.play()
+            }
+            self.image = nil
+            self.showPlayerControls = true
+        } else {
+            self.image = imageView.map(Image.init(uiImage:))
+            self.player = nil
+            self.showPlayerControls = false
+        }
+    }
+    
 
     var header: some View {
         HStack {
             dismissButton
             Spacer()
-//            screenCaptureButton
+            screenCaptureButton
         }
     }
 
@@ -125,15 +159,26 @@ struct AnnotatableVideoPlayer: View {
             ZoomableScrollView {
                 ZStack {
                     playerLayer
+                    // Place the image on top of the player layer
+                    if let image = image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding()
+                    }
                     canvasLayer
-                    if angleShow{
+                    if angleShow {
                         drawingAngle
                     }
                 }
             }
             .onAppear {
                 loadPlayer()
+                startObservingPlayerProgress()
             }
+            .onDisappear(perform: deinitAll)
+            
             inputLayer
         }
     }
@@ -142,8 +187,11 @@ struct AnnotatableVideoPlayer: View {
         playerControls
     }
 
+    
     var playerLayer: some View {
-        VideoPlayer(player: player)
+//        VideoPlayer(player: player)
+//            .disabled(true)
+        VideoPlayer(player: presentedPlayers.first?.player)
             .disabled(true)
     }
     
@@ -151,11 +199,35 @@ struct AnnotatableVideoPlayer: View {
     var playerControls: some View {
         HStack(spacing: 14) {
             playPauseButton
-            playerSlider
+            mainSliders
+//            playerSlider
 //            playerCountdown
         }
     }
+    
+    
+    
+    
 
+    func startObservingPlayerProgress() {
+        guard let player = player else { return }
+//        playerTimeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 1, preferredTimescale: 1), queue: DispatchQueue.main) { time in
+//            let playerCurrentTime = CMTimeGetSeconds(time)
+//            let playerDuration = player.currentItem?.duration.seconds ?? 0
+//            self.playerProgress = Double(Float(playerCurrentTime / playerDuration))
+//        }
+        let interval = CMTime(seconds: 0.05, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        if let player = self.player {
+            self.playerTimeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
+                guard let duration = player.currentItem?.duration else { return }
+                self.playerProgress = time.seconds / duration.seconds
+                self.firstSliderProgress = time.seconds / duration.seconds
+            }
+        }
+    }
+    
+   
+    
     @ViewBuilder
     var playPauseButton: some View {
         Button {
@@ -175,67 +247,157 @@ struct AnnotatableVideoPlayer: View {
                 .foregroundStyle(.white)
         }
     }
+    
+    @ViewBuilder
+    private var mainSliders: some View {
+            if let player = player {
+                mainSlider(player: player, progress: $firstSliderProgress)
+            }
+    }
 
     @ViewBuilder
-    var playerSlider: some View {
-        let height: CGFloat = 8
+    private func mainSlider(player: AVPlayer, progress: Binding<CGFloat>) -> some View {
+        let stripeHeight: CGFloat = 4
+        let circleSize: CGFloat = 24
+        let timeLabelWidth: CGFloat = 10
         GeometryReader { proxy in
+            let fullWidth = proxy.size.width
+            let progressWidth: CGFloat = fullWidth * progress.wrappedValue
             ZStack {
-                RoundedRectangle(cornerRadius: height/2)
-                    .frame(height: height)
-                    .foregroundStyle(.white.opacity(0.33))
-                RoundedRectangle(cornerRadius: height/2)
-                    .frame(
-                        width: abs(playerSliderLocation.x),
-                        height: height
-                    )
-                    .position(
-                        x: abs(playerSliderLocation.x)/2,
-                        y: height/2
-                    )
+                HStack(spacing: 0) {
+                    RoundedRectangle(cornerRadius: stripeHeight/2)
+                        .frame(width: max(0, progressWidth), height: stripeHeight)
+                        .foregroundStyle(Color.signatureGreen1)
+                    RoundedRectangle(cornerRadius: stripeHeight/2)
+                        .frame(width: max(0, fullWidth - progressWidth), height: stripeHeight)
+                        .foregroundStyle(Color.secondaryGradientEnd1)
+                }
+                Circle()
                     .foregroundStyle(.white)
-            }
-            .foregroundStyle(.white)
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        sliderDragGestureActive = true
-                        playerSliderLocation.x = min(
-                            max(
-                                0,
-                                value.location.x
-                            ),
-                            proxy.size.width
-                        )
-                        let progress = Float(playerSliderLocation.x/proxy.size.width)
-                        seekPlayerToPercentage(progress)
-                        playerSliderLocation.y = height/2
-                    }
-                    .onEnded { value in
-                        sliderDragGestureActive = false
-                    }
-            )
-            .onAppear {
-                self.inferredSliderWidth = proxy.size.width
+                    .frame(width: circleSize)
+                    .position(x: progressWidth, y: proxy.size.height/2)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                    progress.wrappedValue = min(
+                                        max(
+                                            0,
+                                            value.location.x
+                                        ),
+                                        proxy.size.width
+                                    ) / proxy.size.width
+                                    playerProgress = progress.wrappedValue
+                                   firstSliderProgress = progress.wrappedValue
+                                    seek(player, to: Float(progress.wrappedValue))
+                                
+                            }
+                            .onEnded { value in
+                                sliderDragGestureActive = false
+                            }
+                    )
+                Text(timeString(from: player.currentItem?.currentTime() ?? CMTime.zero))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .background(Color.black)
+                    .cornerRadius(8)
+                    .position(x: progressWidth - timeLabelWidth / 2, y: proxy.size.height / 2 - circleSize - 8) // Adjust the Y position as needed
+                    .opacity(progressWidth > proxy.size.width - 0 ? 0 : 1)
             }
         }
-        .frame(height: height)
-        .onAppear {
-            playerSliderLocation.y = height/2
+        .frame(height: circleSize + 20)
+    }
+    
+    private func seek(_ player: AVPlayer, to percentage: Float) {
+        guard let duration = player.currentItem?.duration else {
+            print("No item loaded in the player.")
+            return
+        }
+        let totalSeconds = CMTimeGetSeconds(duration)
+        let seekSeconds = totalSeconds * Double(percentage)
+        let seekTime = CMTime(seconds: seekSeconds, preferredTimescale: Int32(NSEC_PER_SEC))
+        
+        player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter:
+                .zero)
+    }
+    
+    
+    private func timeString(from time: CMTime) -> String {
+        guard !time.isIndefinite else {
+            return "--:--"
+        }
+
+        let totalSeconds = CMTimeGetSeconds(time)
+        let hours = Int(totalSeconds / 3600)
+        let minutes = Int(totalSeconds.truncatingRemainder(dividingBy: 3600) / 60)
+        let seconds = Int(totalSeconds.truncatingRemainder(dividingBy: 60))
+
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
         }
     }
+//    @ViewBuilder
+//    var playerSlider: some View {
+//        let height: CGFloat = 8
+//        GeometryReader { proxy in
+//            ZStack {
+//                RoundedRectangle(cornerRadius: height/2)
+//                    .frame(height: height)
+//                    .foregroundStyle(.white.opacity(0.33))
+//                RoundedRectangle(cornerRadius: height/2)
+//                    .frame(
+//                        width: abs(playerSliderLocation.x),
+//                        height: height
+//                    )
+//                    .position(
+//                        x: abs(playerSliderLocation.x)/2,
+//                        y: height/2
+//                    )
+//                    .foregroundStyle(.white)
+//            }
+//            .foregroundStyle(.white)
+//            .gesture(
+//                DragGesture()
+//                    .onChanged { value in
+//                        sliderDragGestureActive = true
+//                        playerSliderLocation.x = min(
+//                            max(
+//                                0,
+//                                value.location.x
+//                            ),
+//                            proxy.size.width
+//                        )
+//                        let progress = Float(playerSliderLocation.x/proxy.size.width)
+//                        seekPlayerToPercentage(progress)
+//                        playerSliderLocation.y = height/2
+//                    }
+//                    .onEnded { value in
+//                        sliderDragGestureActive = false
+//                    }
+//            )
+//            .onAppear {
+//                self.inferredSliderWidth = proxy.size.width
+//            }
+//        }
+//        .frame(height: height)
+//        .onAppear {
+//            playerSliderLocation.y = height/2
+//        }
+//    }
 
 //    var playerCountdown: some View {
 //        VideoPlayerCountdown(player: $player)
 //            .foregroundStyle(.white.opacity(0.75))
 //    }
 
-    func loadPlayer(autoplay: Bool = true) {
-        self.player = .init(url: url)
-        if autoplay {
-            self.player?.play()
-        }
-    }
+//    func loadPlayer(autoplay: Bool = true) {
+//        self.player = .init(url: url)
+//        if autoplay {
+//            self.player?.play()
+//        }
+//    }
 
     func togglePlayer() {
         let newValue = !self.playerPaused
@@ -261,17 +423,42 @@ struct AnnotatableVideoPlayer: View {
     }
 
     func seekPlayerToPercentage(_ percentage: Float) {
-//        guard let player else { return }
-//        guard let duration = player.currentItem?.duration else {
-//            print("No item loaded in the player.")
-//            return
-//        }
-//
-//        let totalSeconds = CMTimeGetSeconds(duration)
-//        let seekSeconds = totalSeconds * Double(percentage)
-//        let seekTime = CMTime(seconds: seekSeconds, preferredTimescale: Int32(NSEC_PER_SEC))
-//
-//        player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
+        guard let player else { return }
+        guard let duration = player.currentItem?.duration else {
+            print("No item loaded in the player.")
+            return
+        }
+
+        let totalSeconds = CMTimeGetSeconds(duration)
+        let seekSeconds = totalSeconds * Double(percentage)
+        let seekTime = CMTime(seconds: seekSeconds, preferredTimescale: Int32(NSEC_PER_SEC))
+
+        player.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+    
+    var screenCaptureButton: some View {
+        ScreenCaptureButton(
+            recordingActive: $feedViewModel.screenCaptureActive,
+            toggleRecording: {
+                withAnimation {
+                    feedViewModel.toggleRecording()
+                }
+            }
+        )
+    }
+    
+    func deinitPlayers() {
+        if let observer = playerTimeObserver {
+            player?.pause()
+            player?.removeTimeObserver(observer)
+            playerTimeObserver = nil
+        }
+        
+    }
+    
+    func deinitAll() {
+//        deinitPlayerObservers()
+        deinitPlayers()
     }
 }
 
@@ -489,15 +676,30 @@ extension AnnotatableVideoPlayer {
 
     var dismissButton: some View {
         Button {
+            self.presentationMode.wrappedValue.dismiss()
         } label: {
-            Image(systemName: "xmark")
+            Image(systemName: "chevron.backward")
                 .font(.title)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
         }
-
     }
 
+    @ViewBuilder
+    var addSecondaryMediaButton: some View {
+//        if secondPlayer == nil {
+            Button {
+                //secondaryMediaPickerPresented = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(width: 27, height: 27)
+            }
+//        }
+    }
+    
     enum ScreenCaptureButtonState {
         case recording
         case idle
@@ -672,7 +874,10 @@ extension AnnotatableVideoPlayer {
     }
 
     func deinitPlayerAndObserver() {
-
+        if let observer = playerTimeObserver {
+            player?.removeTimeObserver(observer)
+            playerTimeObserver = nil
+        }
     }
 }
 
@@ -723,6 +928,14 @@ struct Scribble {
     var lineWidth: Double = 1.0
 }
 
+extension AVPlayer {
+    var randomId: String { UUID().uuidString }
+}
+
+struct IdentifiablePlayer: Identifiable {
+    var id = UUID()
+    var player: AVPlayer
+}
 
 struct Line {
     var start: CGPoint
@@ -771,7 +984,7 @@ extension CGPoint {
 
 struct AnnotatableVideoPlayer_Previews: PreviewProvider {
     static var previews: some View {
-        AnnotatableVideoPlayer(url: .documentsDirectory)
+        AnnotatableVideoPlayer(url: .documentsDirectory, imageView: nil, feedViewModel: .init())
     }
 }
 

@@ -11,7 +11,8 @@ import SwiftUI
 struct VideoEditorApp: App {
     var body: some Scene {
         WindowGroup {
-            AnnotatableVideoPlayer(url: .documentsDirectory)
+            //AnnotatableVideoPlayer(url: .documentsDirectory)
+            ContentView()
         }
     }
 }
